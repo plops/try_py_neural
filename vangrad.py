@@ -16,8 +16,8 @@ Options:
   -n N           points per class [default: 100]
   -d D           dimensions       [default: 2]
   -k K           number of classes [default: 3]
-  -1 H1          number of neurons in first hidden layer
-  -2 H2          number of neurons in second hidden layer
+  -1 H1          number of neurons in first hidden layer [default: 11]
+  -2 H2          number of neurons in second hidden layer [default: 3]
  
 try code from
 https://cs224d.stanford.edu/notebooks/vanishing_grad_example.html
@@ -108,7 +108,7 @@ def train_3layer(X, y, model, step_size, reg):
 
 if __name__ == '__main__':
     arguments = docopt.docopt(__doc__, version='0.0.1')
-    print(f'arg={arguments}')
+    # print(f'arg={arguments}')
     # np.random.seed(0)
 
     N = int(arguments['-n'])  # points per class
