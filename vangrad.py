@@ -158,7 +158,7 @@ if __name__ == '__main__':
     Z = Z.reshape(xx.shape)
     fig = plt.figure()
     plt.contourf(xx, yy, Z, alpha=.8)
-    plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
+    plt.scatter(X[:, 0], X[:, 1], c=y, s=40, edgecolors='k')
     plt.xlim(xx.min(), xx.max())
     plt.ylim(yy.min(), yy.max())
     plt.savefig('/dev/shm/vangrad_010_spiral_decision.png')
