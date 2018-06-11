@@ -27,3 +27,98 @@ for j in range(K):
 
 plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
 plt.savefig('/dev/shm/vangrad_000_spiral_scatter.png')
+
+
+def relu(x):
+    return np.maximum(0, x)
+
+
+def pluck(dict, *args):
+    return (dict[arg] for arg in args)
+
+
+def train_3layer(X, y, model, step_size, reg):
+    h, h2, W1, W2, W3, b1, b2, b3 = pluck(
+        model, 'h', 'h2', 'W1', 'W2', 'W3', 'b1', 'b2', 'b3')
+    num_examples = X.shape[0]
+    for i in range(50000):
+        hidden_layer = relu(np.dot(X, W1) + b1)
+        hidden_layer2 = relu(np.dot(hidden_layer, W2) + b2)
+        scores = np.dot(hidden_layer, W3) + b3
+        exp_scores = np.exp(scores)
+        probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)  # NxK
+        correct_logprobs = -np.log(probs[range(num_examples), y])
+        data_loss = np.sum(correct_logprobs) / num_examples
+        reg_loss = .5 * reg * (np.sum(W1**2) + np.sum(W2**2) + np.sum(W3**2))
+        loss = data_loss + reg_loss
+        if i % 1000 == 0:
+            print('iteration {}: loss {}'.format(i, loss))
+
+        # gradient on scores
+        dscores = probs
+        dscores[range(num_examples), y] -= 1
+        dscores /= num_examples
+
+        # backprop
+
+        dW3 = (hidden_layer2.T).dot(dscores)
+        db3 = np.sum(dscores, axis=0, keepdims=True)
+
+        dhidden2 = np.dot(dscores, W3.T)
+        dhidden2[hidden_layer <= 0] = 0
+        dW2 = np.dot(hidden_layer2.T, dhidden2)
+
+        # update layer 2
+        # np.sum(np.abs(dW2))/np.sum(np.abs(dW2.shape))
+
+        db2 = np.sum(dhidden2, axis=0)
+        dhidden = np.dot(dhidden2, W2.T)
+        dhidden[hidden_layer <= 0] = 0
+
+        dW1 = np.dot(X.T, dhidden)
+
+        # update layer1
+        # np.sum(np.abs(dW1))/np.sum(np.abs(dW1.shape))
+
+        db1 = np.sum(dhidden, axis=0)
+
+        # regularization
+        dW3 += reg * W3
+        dW2 += reg * W2
+        dW1 += reg * W1
+
+        # update
+        W1 += -step_size * dW1
+        W2 += -step_size * dW2
+        W3 += -step_size * dW3
+        b1 += -step_size * db1
+        b2 += -step_size * db2
+        b3 += -step_size * db3
+
+    # training set accuracy
+    hidden_layer = relu(np.dot(X, W1) + b1)
+    hidden_layer2 = relu(np.dot(hidden_layer, W2) + b2)
+
+    scores = np.dot(hidden_layer2, W3) + b3
+    predicted_class = np.argmax(scores, axis=1)
+    print('training accuracy: {}'.format(np.mean(predicted_class == y)))
+    return W1, W2, W3, b1, b2, b3
+
+
+N = 100
+D = 2
+K = 3
+h = 50
+h2 = 50
+num_train_examples = X.shape[0]
+
+model = {'h': h,
+         'h2': h2,
+         'W1': .1 * np.random.randn(D, h),
+         'W2': .1 * np.random.randn(h, h2),
+         'W3': .1 * np.random.randn(h2, K),
+         'b1': np.zeros((1, h)),
+         'b2': np.zeros((1, h2)),
+         'b3': np.zeros((1, K)), }
+
+W1, W2, W3, b1, b2, b3 = train_3layer(X, y, model, step_size=1e-1, reg=1e-3)
