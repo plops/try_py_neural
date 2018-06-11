@@ -1,4 +1,24 @@
-"""
+"""learn classifier
+
+Usage:
+  vangrad [-Vh] [-n N] [-d D] [-k K] [-1 H1] [-2 H2]
+ 
+Arguments:
+  N = 10  # points per class
+  D = 2  # dimensions
+  K = 3  # number of classes
+  H1
+  H2   
+
+Options:
+  -h --help      Show this screen
+  -V --version   show version and exit
+  -n N           points per class [default: 100]
+  -d D           dimensions       [default: 2]
+  -k K           number of classes [default: 3]
+  -1 H1          number of neurons in first hidden layer
+  -2 H2          number of neurons in second hidden layer
+ 
 try code from
 https://cs224d.stanford.edu/notebooks/vanishing_grad_example.html
 
@@ -7,26 +27,7 @@ https://cs224d.stanford.edu/notebooks/vanishing_grad_example.html
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-np.random.seed(0)
-
-N = 100  # points per class
-D = 2  # dimensions
-K = 3  # number of classes
-X = np.zeros((N * K, D))
-num_train_examples = X.shape[0]
-y = np.zeros(N * K, dtype='uint8')
-
-
-for j in range(K):
-    ix = range(N * j, N * (j + 1))
-    r = np.linspace(.0, 1, N)
-    theta = np.linspace(j * 4, (j + 1) * 4, N) + np.random.randn(N) * .2
-    X[ix] = np.c_[r * np.sin(theta), r * np.cos(theta)]
-    y[ix] = j
-
-plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
-plt.savefig('/dev/shm/vangrad_000_spiral_scatter.png')
+import docopt
 
 
 def relu(x):
@@ -105,42 +106,59 @@ def train_3layer(X, y, model, step_size, reg):
     return W1, W2, W3, b1, b2, b3
 
 
-#N = 100
-#D = 2
-#K = 3
-h = 11
-h2 = 3
-num_train_examples = X.shape[0]
+if __name__ == '__main__':
+    arguments = docopt.docopt(__doc__, version='0.0.1')
+    print(f'arg={arguments}')
+    # np.random.seed(0)
 
+    N = int(arguments['-n'])  # points per class
+    D = int(arguments['-d'])  # dimensions
+    K = int(arguments['-k'])  # number of classes
+    X = np.zeros((N * K, D))
+    num_train_examples = X.shape[0]
+    y = np.zeros(N * K, dtype='uint8')
 
-model = {'h': h,
-         'h2': h2,
-         'W1': .1 * np.random.randn(D, h),
-         'W2': .1 * np.random.randn(h, h2),
-         'W3': .1 * np.random.randn(h2, K),
-         'b1': np.zeros((1, h)),
-         'b2': np.zeros((1, h2)),
-         'b3': np.zeros((1, K)), }
+    for j in range(K):
+        ix = range(N * j, N * (j + 1))
+        r = np.linspace(.0, 1, N)
+        theta = np.linspace(j * 4, (j + 1) * 4, N) + np.random.randn(N) * .2
+        X[ix] = np.c_[r * np.sin(theta), r * np.cos(theta)]
+        y[ix] = j
 
+    plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
+    plt.savefig('/dev/shm/vangrad_000_spiral_scatter.png')
 
-W1, W2, W3, b1, b2, b3 = train_3layer(X, y, model, step_size=1e-1, reg=1e-3)
+    h = int(arguments['-1'])
+    h2 = int(arguments['-2'])
+    num_train_examples = X.shape[0]
 
+    model = {'h': h,
+             'h2': h2,
+             'W1': .1 * np.random.randn(D, h),
+             'W2': .1 * np.random.randn(h, h2),
+             'W3': .1 * np.random.randn(h2, K),
+             'b1': np.zeros((1, h)),
+             'b2': np.zeros((1, h2)),
+             'b3': np.zeros((1, K)), }
 
-h = .02
-xmi, xma = X[:, 0].min() - 1, X[:, 0].max() + 1
-ymi, yma = X[:, 1].min() - 1, X[:, 1].max() + 1
-xx, yy = np.meshgrid(np.arange(xmi, xma, h),
-                     np.arange(ymi, yma, h))
-Z = np.dot(relu(np.dot(relu(np.dot(np.c_[xx.ravel(),
-                                         yy.ravel()],
-                                   W1)
-                            + b1), W2)
-                + b2), W3) + b3
-Z = np.argmax(Z, axis=1)
-Z = Z.reshape(xx.shape)
-fig = plt.figure()
-plt.contourf(xx, yy, Z, alpha=.8)
-plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
-plt.xlim(xx.min(), xx.max())
-plt.ylim(yy.min(), yy.max())
-plt.savefig('/dev/shm/vangrad_010_spiral_decision.png')
+    W1, W2, W3, b1, b2, b3 = train_3layer(
+        X, y, model, step_size=1e-1, reg=1e-3)
+
+    h = .02
+    xmi, xma = X[:, 0].min() - 1, X[:, 0].max() + 1
+    ymi, yma = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(xmi, xma, h),
+                         np.arange(ymi, yma, h))
+    Z = np.dot(relu(np.dot(relu(np.dot(np.c_[xx.ravel(),
+                                             yy.ravel()],
+                                       W1)
+                                + b1), W2)
+                    + b2), W3) + b3
+    Z = np.argmax(Z, axis=1)
+    Z = Z.reshape(xx.shape)
+    fig = plt.figure()
+    plt.contourf(xx, yy, Z, alpha=.8)
+    plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
+    plt.xlim(xx.min(), xx.max())
+    plt.ylim(yy.min(), yy.max())
+    plt.savefig('/dev/shm/vangrad_010_spiral_decision.png')
