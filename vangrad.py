@@ -44,7 +44,7 @@ def train_3layer(X, y, model, step_size, reg):
     for i in range(50000):
         hidden_layer = relu(np.dot(X, W1) + b1)
         hidden_layer2 = relu(np.dot(hidden_layer, W2) + b2)
-        scores = np.dot(hidden_layer, W3) + b3
+        scores = np.dot(hidden_layer2, W3) + b3
         exp_scores = np.exp(scores)
         probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)  # NxK
         correct_logprobs = -np.log(probs[range(num_examples), y])
@@ -65,8 +65,8 @@ def train_3layer(X, y, model, step_size, reg):
         db3 = np.sum(dscores, axis=0, keepdims=True)
 
         dhidden2 = np.dot(dscores, W3.T)
-        dhidden2[hidden_layer <= 0] = 0
-        dW2 = np.dot(hidden_layer2.T, dhidden2)
+        dhidden2[hidden_layer2 <= 0] = 0
+        dW2 = np.dot(hidden_layer.T, dhidden2)
 
         # update layer 2
         # np.sum(np.abs(dW2))/np.sum(np.abs(dW2.shape))
@@ -105,12 +105,13 @@ def train_3layer(X, y, model, step_size, reg):
     return W1, W2, W3, b1, b2, b3
 
 
-N = 100
-D = 2
-K = 3
-h = 50
-h2 = 50
+#N = 100
+#D = 2
+#K = 3
+h = 11
+h2 = 3
 num_train_examples = X.shape[0]
+
 
 model = {'h': h,
          'h2': h2,
@@ -120,5 +121,6 @@ model = {'h': h,
          'b1': np.zeros((1, h)),
          'b2': np.zeros((1, h2)),
          'b3': np.zeros((1, K)), }
+
 
 W1, W2, W3, b1, b2, b3 = train_3layer(X, y, model, step_size=1e-1, reg=1e-3)
