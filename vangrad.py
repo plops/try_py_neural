@@ -121,7 +121,8 @@ if __name__ == '__main__':
     for j in range(K):
         ix = range(N * j, N * (j + 1))
         r = np.linspace(.0, 1, N)
-        theta = np.linspace(j * 4, (j + 1) * 4, N) + np.random.randn(N) * .2
+        theta = np.linspace(j * 4, (j + 1) * 4,
+                            N) + np.random.randn(N) * .2
         X[ix] = np.c_[r * np.sin(theta), r * np.cos(theta)]
         y[ix] = j
 
